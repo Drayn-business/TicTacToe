@@ -1,27 +1,34 @@
-use std::time::Duration;
+use std::{time::Duration, path::Path};
 
-use sdl2::{pixels::Color, rect::{Rect, Point}, event::Event, keyboard::Keycode, mouse::MouseButton, render::Canvas, video::Window};
+use sdl2::{pixels::Color, rect::{Rect, Point}, event::Event, keyboard::Keycode, mouse::MouseButton, render::{Canvas, TextureQuery}, video::Window};
 
 fn main() {
     let game_size: u32 = 600;
     let box_size: u32 = game_size/5;
     let menu_size = 300;
+    let font_path = "C:/Sources/TicTacToe/fonts/monospace.medium.ttf";
     let mut board: [[i32; 3]; 3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     let mut player = false;
     let mut end = false;
 
+    let reset_button_rect = Rect::new(game_size as i32 + 50, 20, 200, 50);
+
     let context = sdl2::init().unwrap();
+    let ttf_context = sdl2::ttf::init().unwrap();
+
     let video_subsystem = context.video().unwrap();
+    let font = ttf_context.load_font(Path::new(font_path), 30).unwrap();
 
     let window = video_subsystem.window("Tic Tac Toe", game_size + menu_size, game_size)
         .build()
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
-
+    
     let mut event_pump = context.event_pump().unwrap();
-
+    
     'running: loop {
+        let texture_creator = canvas.texture_creator();
         canvas.clear();
 
         for event in event_pump.poll_iter() {
@@ -30,14 +37,18 @@ fn main() {
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
-                Event::KeyDown { keycode: Some(Keycode::R), .. } => {
-                    end = false;
-                    board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-                    player = false;
-                },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
                     if end == true {continue;}
 
+                    //Menu
+                    if x >= reset_button_rect.x() && x <= reset_button_rect.x() + reset_button_rect.width() as i32 &&
+                       y >= reset_button_rect.y() && y <= reset_button_rect.y() + reset_button_rect.height() as i32{
+                        end = false;
+                        board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+                        player = false;
+                    }
+
+                    //Game
                     if x >= game_size as i32 || y >= game_size as i32 {continue;}
 
                     let symbol = if player {1} else {2};
@@ -46,10 +57,11 @@ fn main() {
                     if board[i][j] == 0{
                         board[i][j] = symbol;
                         
-                        end = check_win(board, player, end);
+                        end = check_win(board, end);
 
-                        player = !player;
                     }
+                    if end == false {player = !player;}
+                    
                 }
                 _ => {}
             }
@@ -96,26 +108,55 @@ fn main() {
         //Background
         canvas.set_draw_color(Color::RGB(30, 30, 30));
         canvas.fill_rect(Rect::new(game_size as i32, 0, menu_size, game_size)).unwrap();
+
+        canvas.set_draw_color(Color::RGB(200, 200, 200));
+        canvas.fill_rect(reset_button_rect).unwrap();
+
+        //Text
+        {
+            let surface = font
+                .render("Reset game")
+                .blended(Color::RGB(30, 30, 30))
+                .unwrap();
+    
+            let texture = texture_creator
+                .create_texture_from_surface(&surface)
+                .unwrap();
+    
+            let TextureQuery { width, height, .. } = texture.query();
+            canvas.copy(&texture, None, Some(Rect::new((game_size + 50 + height / 3) as i32, 20 + height as i32 / 4, width, height))).unwrap();        
+        }
+
+        if end == true {
+            let surface = font
+                .render(format!("Player {} won!", player as i32 + 1).as_str())
+                .blended(Color::RGB(200, 200, 200))
+                .unwrap();
+    
+            let texture = texture_creator
+                .create_texture_from_surface(&surface)
+                .unwrap();
+    
+            let TextureQuery { width, height, .. } = texture.query();
         
+            canvas.copy(&texture, None, Some(Rect::new((game_size + menu_size / 2 - width / 2) as i32, game_size as i32 / 2, width, height))).unwrap();
+        }
+
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
 
-fn check_win(board: [[i32; 3]; 3], player: bool, end: bool) -> bool{
+fn check_win(board: [[i32; 3]; 3], end: bool) -> bool{
     for (i, row) in board.iter().enumerate() {
         if (row.iter().min() == row.iter().max() && row.iter().min() != Some(&0)) |
            (board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]){
-            if end == true {return end;}
-            println!("Player {} won!", player as i32 + 1);
             return true;
         }
     }
 
     if (board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]) |
        (board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]){
-        if end == true {return end;}
-        println!("Player {} won!", player as i32 + 1);
         return true;
     }
 
