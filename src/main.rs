@@ -3,8 +3,9 @@ use std::time::Duration;
 use sdl2::{pixels::Color, rect::{Rect, Point}, event::Event, keyboard::Keycode, mouse::MouseButton, render::Canvas, video::Window};
 
 fn main() {
-    let size: u32 = 600;
-    let box_size: u32 = size/5;
+    let game_size: u32 = 600;
+    let box_size: u32 = game_size/5;
+    let menu_size = 300;
     let mut board: [[i32; 3]; 3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     let mut player = false;
     let mut end = false;
@@ -12,7 +13,7 @@ fn main() {
     let context = sdl2::init().unwrap();
     let video_subsystem = context.video().unwrap();
 
-    let window = video_subsystem.window("Tic Tac Toe", size, size)
+    let window = video_subsystem.window("Tic Tac Toe", game_size + menu_size, game_size)
         .build()
         .unwrap();
 
@@ -28,18 +29,20 @@ fn main() {
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
-                }
+                },
                 Event::KeyDown { keycode: Some(Keycode::R), .. } => {
                     end = false;
                     board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
                     player = false;
-                }
+                },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
                     if end == true {continue;}
 
+                    if x >= game_size as i32 || y >= game_size as i32 {continue;}
+
                     let symbol = if player {1} else {2};
-                    let i = (y / (size as i32 / 3)) as usize;
-                    let j = (x / (size as i32 / 3)) as usize;
+                    let i = (y / (game_size as i32 / 3)) as usize;
+                    let j = (x / (game_size as i32 / 3)) as usize;
                     if board[i][j] == 0{
                         board[i][j] = symbol;
                         
@@ -52,22 +55,30 @@ fn main() {
             }
         }
 
+        //Game
+
         //Background
         canvas.set_draw_color(Color::RGB(30, 30, 30));
-        canvas.fill_rect(Rect::new(0, 0, size, size)).unwrap();
+        canvas.fill_rect(Rect::new(0, 0, game_size, game_size)).unwrap();
 
         //Board
         canvas.set_draw_color(Color::RGB(200, 200, 200));
-        canvas.fill_rect(Rect::new((size / 3) as i32, 0, 2, size)).unwrap();
-        canvas.fill_rect(Rect::new(((size / 3) * 2) as i32, 0, 2, size)).unwrap();
+        let line_strength: u32 = 2;
 
-        canvas.fill_rect(Rect::new(0, (size / 3) as i32, size, 2)).unwrap();
-        canvas.fill_rect(Rect::new(0, ((size / 3) * 2) as i32, size, 2)).unwrap();
+        canvas.fill_rect(Rect::new(0, 0, line_strength, game_size)).unwrap();
+        canvas.fill_rect(Rect::new((game_size / 3) as i32, 0, line_strength, game_size)).unwrap();
+        canvas.fill_rect(Rect::new(((game_size / 3) * 2) as i32, 0, line_strength, game_size)).unwrap();
+        canvas.fill_rect(Rect::new((game_size - line_strength) as i32, 0, line_strength, game_size)).unwrap();
+
+        canvas.fill_rect(Rect::new(0, 0, game_size, line_strength)).unwrap();
+        canvas.fill_rect(Rect::new(0, (game_size / 3) as i32, game_size, line_strength)).unwrap();
+        canvas.fill_rect(Rect::new(0, ((game_size / 3) * 2) as i32, game_size, line_strength)).unwrap();
+        canvas.fill_rect(Rect::new(0, (game_size - line_strength) as i32, game_size, line_strength)).unwrap();
 
         for (i, row) in board.iter().enumerate() {
             for (j, element) in row.iter().enumerate() {
-                let centered_x = j as i32 * (size as i32 / 3) + (size as i32 / 3) / 2;
-                let centered_y = i as i32 * (size as i32 / 3) + (size as i32 / 3) / 2;
+                let centered_x = j as i32 * (game_size as i32 / 3) + (game_size as i32 / 3) / 2;
+                let centered_y = i as i32 * (game_size as i32 / 3) + (game_size as i32 / 3) / 2;
                 
                 if *element == 0 {continue;}
                 else if *element == 1 {
@@ -79,6 +90,12 @@ fn main() {
                 }
             }
         }
+
+        //Menu
+
+        //Background
+        canvas.set_draw_color(Color::RGB(30, 30, 30));
+        canvas.fill_rect(Rect::new(game_size as i32, 0, menu_size, game_size)).unwrap();
         
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
