@@ -28,7 +28,12 @@ fn main() {
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
-                },
+                }
+                Event::KeyDown { keycode: Some(Keycode::R), .. } => {
+                    end = false;
+                    board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+                    player = false;
+                }
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
                     if end == true {continue;}
 
