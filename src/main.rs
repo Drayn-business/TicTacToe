@@ -31,18 +31,27 @@ fn main() {
                 },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
                     if end == true {continue;}
-                    
+
                     let symbol = if player {1} else {2};
                     let i = (y / (size as i32 / 3)) as usize;
                     let j = (x / (size as i32 / 3)) as usize;
                     if board[i][j] == 0{
                         board[i][j] = symbol;
                         
-                        for row in board {
+                        for (i, row) in board.iter().enumerate() {
                             if row.iter().min() == row.iter().max() && row.iter().min() != Some(&0){
-                                println!("Player {} won!", player as i32 + 1);
-                                end = true;
+                                end = win_game(player, end);
                             }
+                            else if board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]{
+                                end = win_game(player, end);
+                            }
+                        }
+
+                        if board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]{
+                            end = win_game(player, end);
+                        }
+                        else if board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]{
+                            end = win_game(player, end);
                         }
 
                         player = !player;
@@ -83,4 +92,10 @@ fn main() {
         canvas.present();
         std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+}
+
+fn win_game(player: bool, end: bool) -> bool{
+    if end == true {return end;}
+    println!("Player {} won!", player as i32 + 1);
+    return true;
 }
