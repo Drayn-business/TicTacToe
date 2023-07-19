@@ -38,21 +38,7 @@ fn main() {
                     if board[i][j] == 0{
                         board[i][j] = symbol;
                         
-                        for (i, row) in board.iter().enumerate() {
-                            if row.iter().min() == row.iter().max() && row.iter().min() != Some(&0){
-                                end = win_game(player, end);
-                            }
-                            else if board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]{
-                                end = win_game(player, end);
-                            }
-                        }
-
-                        if board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]{
-                            end = win_game(player, end);
-                        }
-                        else if board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]{
-                            end = win_game(player, end);
-                        }
+                        end = check_win(board, player, end);
 
                         player = !player;
                     }
@@ -94,8 +80,22 @@ fn main() {
     }
 }
 
-fn win_game(player: bool, end: bool) -> bool{
-    if end == true {return end;}
-    println!("Player {} won!", player as i32 + 1);
-    return true;
+fn check_win(board: [[i32; 3]; 3], player: bool, end: bool) -> bool{
+    for (i, row) in board.iter().enumerate() {
+        if (row.iter().min() == row.iter().max() && row.iter().min() != Some(&0)) |
+           (board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]){
+            if end == true {return end;}
+            println!("Player {} won!", player as i32 + 1);
+            return true;
+        }
+    }
+
+    if (board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]) |
+       (board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]){
+        if end == true {return end;}
+        println!("Player {} won!", player as i32 + 1);
+        return true;
+    }
+
+    return end;
 }
