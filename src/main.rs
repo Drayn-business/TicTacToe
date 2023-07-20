@@ -79,7 +79,7 @@ fn main() {
 
         canvas.clear();
 
-        render_background(&mut canvas, game_size, menu_size);
+        render_background(&mut canvas);
         render_grid(&mut canvas, game_size);
         render_symbols(&mut canvas, board, game_size, box_size);
         draw_winning_line(&mut canvas, game_size, winning_line.0, winning_line.1, winning_line.2, winning_line.3);

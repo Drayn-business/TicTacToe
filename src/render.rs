@@ -3,12 +3,9 @@ pub mod renderer {
 
     use crate::draw_utils::{draw_circle, draw_cross};
     
-    pub fn render_background(canvas: &mut Canvas<Window>, game_size: u32, menu_size: u32){
+    pub fn render_background(canvas: &mut Canvas<Window>){
         canvas.set_draw_color(Color::RGB(30, 30, 30));
-        //Game
-        canvas.fill_rect(Rect::new(0, 0, game_size, game_size)).unwrap();
-        //Menu
-        canvas.fill_rect(Rect::new(game_size as i32, 0, menu_size, game_size)).unwrap();
+        canvas.clear();
     }
 
     pub fn render_grid(canvas: &mut Canvas<Window>, game_size: u32){
