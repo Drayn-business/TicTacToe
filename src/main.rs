@@ -6,10 +6,14 @@ fn main() {
     let game_size: u32 = 600;
     let box_size: u32 = game_size/5;
     let menu_size = 300;
-    let font_path = "C:/Sources/TicTacToe/fonts/monospace.medium.ttf";
+    let font_path = "C:/Sources/TicTacToe/fonts/Roboto-Medium.ttf";
     let mut board: [[i32; 3]; 3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     let mut player = false;
     let mut end = false;
+    let mut winning_x0 = 0;
+    let mut winning_y0 = 0;
+    let mut winning_x1 = 0;
+    let mut winning_y1 = 0;
 
     let reset_button_rect = Rect::new(game_size as i32 + 50, 20, 200, 50);
 
@@ -38,15 +42,16 @@ fn main() {
                     break 'running
                 },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
-                    if end == true {continue;}
-
                     //Menu
                     if x >= reset_button_rect.x() && x <= reset_button_rect.x() + reset_button_rect.width() as i32 &&
                        y >= reset_button_rect.y() && y <= reset_button_rect.y() + reset_button_rect.height() as i32{
                         end = false;
                         board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
                         player = false;
+                        (winning_x0, winning_y0, winning_x1, winning_y1) = (0, 0, 0, 0);
                     }
+
+                    if end == true {continue;}
 
                     //Game
                     if x >= game_size as i32 || y >= game_size as i32 {continue;}
@@ -57,7 +62,7 @@ fn main() {
                     if board[i][j] == 0{
                         board[i][j] = symbol;
                         
-                        end = check_win(board, end);
+                        (end, winning_x0, winning_y0, winning_x1, winning_y1) = check_win(board, end);
 
                     }
                     if end == false {player = !player;}
@@ -87,6 +92,7 @@ fn main() {
         canvas.fill_rect(Rect::new(0, ((game_size / 3) * 2) as i32, game_size, line_strength)).unwrap();
         canvas.fill_rect(Rect::new(0, (game_size - line_strength) as i32, game_size, line_strength)).unwrap();
 
+        //Symbols
         for (i, row) in board.iter().enumerate() {
             for (j, element) in row.iter().enumerate() {
                 let centered_x = j as i32 * (game_size as i32 / 3) + (game_size as i32 / 3) / 2;
@@ -102,6 +108,8 @@ fn main() {
                 }
             }
         }
+
+        draw_winning_line(&mut canvas, game_size, winning_x0, winning_y0, winning_x1, winning_y1);
 
         //Menu
 
@@ -124,7 +132,7 @@ fn main() {
                 .unwrap();
     
             let TextureQuery { width, height, .. } = texture.query();
-            canvas.copy(&texture, None, Some(Rect::new((game_size + 50 + height / 3) as i32, 20 + height as i32 / 4, width, height))).unwrap();        
+            canvas.copy(&texture, None, Some(Rect::new((game_size + width / 2 - 5) as i32, 20 + height as i32 / 4, width, height))).unwrap();        
         }
 
         if end == true {
@@ -147,20 +155,24 @@ fn main() {
     }
 }
 
-fn check_win(board: [[i32; 3]; 3], end: bool) -> bool{
+fn check_win(board: [[i32; 3]; 3], end: bool) -> (bool, i32, i32, i32, i32){
     for (i, row) in board.iter().enumerate() {
-        if (row.iter().min() == row.iter().max() && row.iter().min() != Some(&0)) |
-           (board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]){
-            return true;
+        if row.iter().min() == row.iter().max() && row.iter().min() != Some(&0){
+            return (true, 0, i as i32, 2, i as i32);
+        }
+        else if board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]{
+            return (true, i as i32, 0, i as i32, 2);
         }
     }
 
-    if (board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]) |
-       (board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]){
-        return true;
+    if board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]{
+        return (true, 0, 0, 2, 2);
+    }
+    else if board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]{
+        return (true, 0, 2, 2, 0);
     }
 
-    return end;
+    return (end, 0, 0, 0, 0);
 }
 
 fn draw_circle(canvas: &mut Canvas<Window>, center_x: i32, center_y: i32, radius: i32){
@@ -214,5 +226,35 @@ fn draw_cross(canvas: &mut Canvas<Window>, x: i32, y: i32, width: i32, height: i
                 canvas.draw_line(Point::new(x1 + i, y0 + i), Point::new(x0 + i, y1 + i)).unwrap();
             }
         }
+    }
+}
+
+fn draw_winning_line(canvas: &mut Canvas<Window>,game_size: u32, board_x0: i32, board_y0: i32, board_x1: i32, board_y1: i32){
+    if board_x0 == board_x1 && board_y0 == board_y1 {return;}
+    let column_size = game_size as i32 / 3;
+
+    if board_x0 == board_x1 {
+        canvas.draw_line(
+            Point::new(board_x0 * column_size + column_size / 2, board_y0 * column_size), 
+            Point::new(board_x1 * column_size + column_size / 2, (board_y1 + 1) * column_size)
+        ).unwrap();
+    } 
+    else if board_y0 == board_y1 {
+        canvas.draw_line(
+            Point::new(board_x0 * column_size, board_y0 * column_size + column_size / 2), 
+            Point::new((board_x1 + 1) * column_size, board_y1 * column_size + column_size / 2)
+        ).unwrap();
+    }
+    else if board_x1 > board_x0 && board_y1 > board_y0 {
+        canvas.draw_line(
+            Point::new(board_x0 * column_size, board_y0 * column_size), 
+            Point::new(board_x1 * column_size + column_size, board_y1 * column_size + column_size)
+        ).unwrap();
+    }
+    else {
+        canvas.draw_line(
+            Point::new(board_x0 * column_size, (board_y0 + 1) * column_size), 
+            Point::new((board_x1 + 1) * column_size, board_y1 * column_size)
+        ).unwrap();
     }
 }
