@@ -14,10 +14,7 @@ fn main() {
     let mut board: [[i32; 3]; 3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     let mut player = false;
     let mut end = false;
-    let mut winning_x0 = 0;
-    let mut winning_y0 = 0;
-    let mut winning_x1 = 0;
-    let mut winning_y1 = 0;
+    let mut winning_line: (i32, i32, i32, i32) = (0, 0, 0, 0);
 
     let reset_button_rect = Rect::new(game_size as i32 + 50, 20, 200, 50);
 
@@ -25,9 +22,12 @@ fn main() {
     let ttf_context = sdl2::ttf::init().unwrap();
 
     let video_subsystem = context.video().unwrap();
-    let font = ttf_context.load_font(Path::new(font_path), 30).unwrap();
+    let font = ttf_context
+        .load_font(Path::new(font_path), 30)
+        .unwrap();
 
-    let window = video_subsystem.window("Tic Tac Toe", game_size + menu_size, game_size)
+    let window = video_subsystem
+        .window("Tic Tac Toe", game_size + menu_size, game_size)
         .build()
         .unwrap();
 
@@ -38,6 +38,8 @@ fn main() {
     'running: loop {
         let texture_creator = canvas.texture_creator();
         canvas.clear();
+
+        //Event handling
 
         for event in event_pump.poll_iter() {
             match event {
@@ -52,7 +54,7 @@ fn main() {
                         end = false;
                         board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
                         player = false;
-                        (winning_x0, winning_y0, winning_x1, winning_y1) = (0, 0, 0, 0);
+                        winning_line = (0, 0, 0, 0);
                     }
 
                     if end == true {continue;}
@@ -63,14 +65,12 @@ fn main() {
                     let symbol = if player {1} else {2};
                     let i = (y / (game_size as i32 / 3)) as usize;
                     let j = (x / (game_size as i32 / 3)) as usize;
-                    if board[i][j] == 0{
+                    if board[i][j] == 0 {
                         board[i][j] = symbol;
                         
-                        (end, winning_x0, winning_y0, winning_x1, winning_y1) = check_win(board, end);
-
+                        (end, winning_line) = check_win(board, end);
                     }
                     if end == false {player = !player;}
-                    
                 }
                 _ => {}
             }
@@ -113,7 +113,7 @@ fn main() {
             }
         }
 
-        draw_winning_line(&mut canvas, game_size, winning_x0, winning_y0, winning_x1, winning_y1);
+        draw_winning_line(&mut canvas, game_size, winning_line.0, winning_line.1, winning_line.2, winning_line.3);
 
         //Menu
 
@@ -150,7 +150,6 @@ fn main() {
                 .unwrap();
     
             let TextureQuery { width, height, .. } = texture.query();
-        
             canvas.copy(&texture, None, Some(Rect::new((game_size + menu_size / 2 - width / 2) as i32, game_size as i32 / 2, width, height))).unwrap();
         }
 
@@ -159,22 +158,22 @@ fn main() {
     }
 }
 
-fn check_win(board: [[i32; 3]; 3], end: bool) -> (bool, i32, i32, i32, i32){
+fn check_win(board: [[i32; 3]; 3], end: bool) -> (bool, (i32, i32, i32, i32)){
     for (i, row) in board.iter().enumerate() {
-        if row.iter().min() == row.iter().max() && row.iter().min() != Some(&0){
-            return (true, 0, i as i32, 2, i as i32);
+        if row.iter().min() == row.iter().max() && row.iter().min() != Some(&0) {
+            return (true, (0, i as i32, 2, i as i32));
         }
         else if board[0][i] != 0 && board[0][i] == board[1][i] && board[0][i] == board[2][i]{
-            return (true, i as i32, 0, i as i32, 2);
+            return (true, (i as i32, 0, i as i32, 2));
         }
     }
 
     if board[0][0] != 0 && board[0][0] == board[1][1] && board[0][0] == board[2][2]{
-        return (true, 0, 0, 2, 2);
+        return (true, (0, 0, 2, 2));
     }
     else if board[0][2] != 0 && board[0][2] == board[1][1] && board[0][2] == board[2][0]{
-        return (true, 0, 2, 2, 0);
+        return (true, (0, 2, 2, 0));
     }
 
-    return (end, 0, 0, 0, 0);
+    return (end, (0, 0, 0, 0));
 }
