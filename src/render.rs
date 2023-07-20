@@ -1,24 +1,9 @@
 pub mod renderer {
     use sdl2::{pixels::Color, rect::Rect, render::{Canvas, TextureQuery, TextureCreator}, video::{Window, WindowContext}, ttf::Font};
 
-    use crate::draw_utils::{draw_circle, draw_cross, draw_winning_line};
-
-    pub fn render(canvas: &mut Canvas<Window>, font: &mut Font<'_, '_>, texture_creator: TextureCreator<WindowContext>, board: [[i32; 3]; 3], game_size: u32, menu_size: u32, end: bool, player: bool, winning_line: (i32, i32, i32, i32), reset_button_rect: Rect){
-        let box_size: u32 = game_size/5;
-
-        canvas.clear();
-
-        render_background(canvas, game_size, menu_size);
-        render_grid(canvas, game_size);
-        render_symbols(canvas, board, game_size, box_size);
-        draw_winning_line(canvas, game_size, winning_line.0, winning_line.1, winning_line.2, winning_line.3);
-        render_button(canvas, reset_button_rect);
-        render_text(canvas, font, texture_creator, game_size, menu_size, end, player);
-
-        canvas.present();
-    }
+    use crate::draw_utils::{draw_circle, draw_cross};
     
-    fn render_background(canvas: &mut Canvas<Window>, game_size: u32, menu_size: u32){
+    pub fn render_background(canvas: &mut Canvas<Window>, game_size: u32, menu_size: u32){
         canvas.set_draw_color(Color::RGB(30, 30, 30));
         //Game
         canvas.fill_rect(Rect::new(0, 0, game_size, game_size)).unwrap();
@@ -26,7 +11,7 @@ pub mod renderer {
         canvas.fill_rect(Rect::new(game_size as i32, 0, menu_size, game_size)).unwrap();
     }
 
-    fn render_grid(canvas: &mut Canvas<Window>, game_size: u32){
+    pub fn render_grid(canvas: &mut Canvas<Window>, game_size: u32){
         canvas.set_draw_color(Color::RGB(200, 200, 200));
         let line_strength: u32 = 2;
 
@@ -41,7 +26,7 @@ pub mod renderer {
         canvas.fill_rect(Rect::new(0, (game_size - line_strength) as i32, game_size, line_strength)).unwrap();
     }
 
-    fn render_symbols(canvas: &mut Canvas<Window>, board: [[i32; 3]; 3], game_size: u32, box_size: u32){
+    pub fn render_symbols(canvas: &mut Canvas<Window>, board: [[i32; 3]; 3], game_size: u32, box_size: u32){
         canvas.set_draw_color(Color::RGB(200, 200, 200));
 
         for (i, row) in board.iter().enumerate() {
@@ -61,12 +46,12 @@ pub mod renderer {
         }
     }
 
-    fn render_button(canvas: &mut Canvas<Window>, reset_button_rect: Rect){
+    pub fn render_button(canvas: &mut Canvas<Window>, reset_button_rect: Rect){
         canvas.set_draw_color(Color::RGB(200, 200, 200));
         canvas.fill_rect(reset_button_rect).unwrap();
     }
 
-    fn render_text(canvas: &mut Canvas<Window>, font: &mut Font<'_, '_>, texture_creator: TextureCreator<WindowContext>, game_size: u32, menu_size: u32, end: bool, player: bool) {
+    pub fn render_text(canvas: &mut Canvas<Window>, font: &mut Font<'_, '_>, texture_creator: TextureCreator<WindowContext>, game_size: u32, menu_size: u32, end: bool, player: bool) {
         {
             let surface = font
                 .render("Reset game")

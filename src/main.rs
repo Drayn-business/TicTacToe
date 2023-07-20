@@ -3,12 +3,14 @@ mod render;
 
 use std::{time::Duration, path::Path};
 
+use draw_utils::draw_winning_line;
 use sdl2::{rect::Rect, event::Event, keyboard::Keycode, mouse::MouseButton};
-use render::renderer;
+use render::renderer::{render_background, render_grid, render_symbols, render_button, render_text};
 
 
 fn main() {
     let game_size: u32 = 600;
+    let box_size: u32 = game_size/5;
     let menu_size = 300;
     let font_path = "C:/Sources/TicTacToe/fonts/Roboto-Medium.ttf";
     let mut board: [[i32; 3]; 3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
@@ -75,7 +77,16 @@ fn main() {
             }
         }
 
-        renderer::render(&mut canvas, &mut font, texture_creator, board, game_size, menu_size, end, player, winning_line, reset_button_rect);
+        canvas.clear();
+
+        render_background(&mut canvas, game_size, menu_size);
+        render_grid(&mut canvas, game_size);
+        render_symbols(&mut canvas, board, game_size, box_size);
+        draw_winning_line(&mut canvas, game_size, winning_line.0, winning_line.1, winning_line.2, winning_line.3);
+        render_button(&mut canvas, reset_button_rect);
+        render_text(&mut canvas, &mut font, texture_creator, game_size, menu_size, end, player);
+
+        canvas.present();
 
         std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
