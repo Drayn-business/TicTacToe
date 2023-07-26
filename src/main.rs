@@ -92,6 +92,8 @@ fn main() {
     }
 }
 
+
+//TODO: optimize
 fn check_win(board: [[i32; 3]; 3], end: bool) -> (bool, (i32, i32, i32, i32)){
     for (i, row) in board.iter().enumerate() {
         if row.iter().min() == row.iter().max() && row.iter().min() != Some(&0) {
